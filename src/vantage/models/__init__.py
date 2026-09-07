@@ -12,6 +12,8 @@ from vantage.models.models import (
     Hypothesis,
     ResearchRecord,
     MatchObservation,
+    ReplayRun,
+    ReplayPrediction,
 )
 from vantage.models.base import Base, TimestampMixin
 
@@ -31,4 +33,6 @@ __all__ = [
     "Hypothesis",
     "ResearchRecord",
     "MatchObservation",
+    "ReplayRun",
+    "ReplayPrediction",
 ]

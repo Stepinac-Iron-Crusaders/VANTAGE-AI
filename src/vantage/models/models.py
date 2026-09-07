@@ -89,6 +89,7 @@ class Match(Base, TimestampMixin):
 
     id = Column(UuidType(), primary_key=True, default=lambda: str(uuid.uuid4()))
     event_id = Column(UuidType(), ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    key: Mapped[str] = mapped_column(String(100), nullable=True)
     match_number: Mapped[int] = mapped_column(Integer, nullable=False)
     set_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     competition_level: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -370,4 +371,60 @@ class MatchObservation(Base, TimestampMixin):
         Index("idx_observation_team", "team_number"),
         Index("idx_observation_event_type", "event_type"),
         Index("idx_observation_confidence", "confidence"),
+    )
+
+
+class ReplayRun(Base, TimestampMixin):
+    __tablename__ = "replay_runs"
+
+    id = Column(UuidType(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_key: Mapped[str] = mapped_column(String(50), nullable=False)
+    strategy: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="completed")
+    total_matches: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    predicted_matches: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    win_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    brier_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    log_loss: Mapped[float | None] = mapped_column(Float, nullable=True)
+    score_mae: Mapped[float | None] = mapped_column(Float, nullable=True)
+    score_rmse: Mapped[float | None] = mapped_column(Float, nullable=True)
+    upset_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    upset_detection_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    metrics = Column(JsonType(), default=dict)
+
+    predictions = relationship(
+        "ReplayPrediction", back_populates="run", lazy="selectin"
+    )
+
+    __table_args__ = (
+        Index("idx_replay_run_event", "event_key"),
+        Index("idx_replay_run_strategy", "strategy", "event_key"),
+    )
+
+
+class ReplayPrediction(Base, TimestampMixin):
+    __tablename__ = "replay_predictions"
+
+    id = Column(UuidType(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    run_id = Column(UuidType(), ForeignKey("replay_runs.id", ondelete="CASCADE"), nullable=False)
+    match_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    competition_level: Mapped[str] = mapped_column(String(20), nullable=False)
+    match_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    predicted_winner: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    predicted_red_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    predicted_blue_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    predicted_red_prob: Mapped[float | None] = mapped_column(Float, nullable=True)
+    actual_winner: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    actual_red_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    actual_blue_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    correct: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    upset: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    score_error: Mapped[float | None] = mapped_column(Float, nullable=True)
+    raw_data = Column(JsonType(), default=dict)
+
+    run = relationship("ReplayRun", back_populates="predictions")
+
+    __table_args__ = (
+        Index("idx_replay_pred_run", "run_id"),
+        Index("idx_replay_pred_run_match", "run_id", "match_key", unique=True),
     )

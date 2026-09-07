@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 import structlog
 
@@ -29,6 +29,12 @@ from vantage.api.tba_client import (
 from vantage.api.statbotics_client import StatboticsClient
 
 logger = structlog.get_logger(__name__)
+
+
+def _from_epoch(epoch: int | None) -> datetime | None:
+    if not epoch:
+        return None
+    return datetime.fromtimestamp(epoch, tz=timezone.utc)
 
 
 class FRCDataPipeline:
@@ -112,6 +118,20 @@ class FRCDataPipeline:
             if epa_data:
                 for epa in epa_data:
                     await self._store_match_epa(session, epa)
+
+    async def ingest_event_epa(self, event_key: str) -> int:
+        tba_matches = await self.tba_client.get_event_matches(event_key)
+        ingested = 0
+        for match_data in tba_matches:
+            epa_data = await self.statbotics_client.get_match_epa(match_data.key)
+            if not epa_data:
+                continue
+            async with get_session() as session:
+                for epa in epa_data:
+                    await self._store_match_epa(session, epa)
+            ingested += 1
+        logger.info("event EPA ingested", event_key=event_key, matches=ingested)
+        return ingested
 
     async def ingest_match(self, match_key: str) -> Match | None:
         async with get_session() as session:
@@ -257,17 +277,31 @@ class FRCDataPipeline:
             session.add(metric)
 
     async def _store_match_epa(self, session: AsyncSession, epa_data: Any) -> None:
-        metric = EPAMetric(
-            team_number=epa_data.team,
-            season=epa_data.season,
-            match_key=epa_data.key,
+        existing = await session.execute(
+            select(EPAMetric).where(
+                EPAMetric.match_key == epa_data.key,
+                EPAMetric.team_number == epa_data.team,
+            )
+        )
+        existing_metric = existing.scalar_one_or_none()
+        payload = dict(
             auto_epa=epa_data.auto_epa,
             teleop_epa=epa_data.teleop_epa,
             endgame_epa=epa_data.endgame_epa,
             overall_epa=epa_data.overall_epa,
             raw_data=epa_data.model_dump(),
         )
-        session.add(metric)
+        if existing_metric:
+            for k, v in payload.items():
+                setattr(existing_metric, k, v)
+        else:
+            metric = EPAMetric(
+                team_number=epa_data.team,
+                season=epa_data.season,
+                match_key=epa_data.key,
+                **payload,
+            )
+            session.add(metric)
 
     async def _store_match(
         self, session: AsyncSession, match_data: TBAMatch
@@ -285,6 +319,8 @@ class FRCDataPipeline:
         red_score = match_data.alliances.get("red", {}).get("score")
         blue_score = match_data.alliances.get("blue", {}).get("score")
         match_status = "complete" if match_data.winning_alliance else "scheduled"
+        actual_time = _from_epoch(match_data.actual_time)
+        predicted_time = _from_epoch(match_data.predicted_time or match_data.time)
 
         existing = await session.execute(
             select(Match).where(
@@ -304,10 +340,17 @@ class FRCDataPipeline:
             match.raw_alliances = match_data.alliances
             match.raw_scores = match_data.scores
             match.status = match_status
+            if match_data.key:
+                match.key = match_data.key
+            if actual_time:
+                match.actual_time = actual_time
+            if predicted_time:
+                match.predicted_time = predicted_time
         else:
             match = Match(
                 event_id=event.id,
                 event=event,
+                key=match_data.key,
                 match_number=match_data.match_number,
                 set_number=match_data.set_number,
                 competition_level=match_data.comp_level,
@@ -317,6 +360,8 @@ class FRCDataPipeline:
                 raw_alliances=match_data.alliances,
                 raw_scores=match_data.scores,
                 status=match_status,
+                actual_time=actual_time,
+                predicted_time=predicted_time,
             )
             session.add(match)
 

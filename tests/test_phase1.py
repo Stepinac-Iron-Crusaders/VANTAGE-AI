@@ -88,6 +88,7 @@ async def validate_models():
         "event_rankings", "team_rankings", "match_stats",
         "team_history", "epa_metrics", "alliance_selections",
         "hypotheses", "research_records", "match_observations",
+        "replay_runs", "replay_predictions",
     ]
 
     missing = [t for t in expected if t not in tables]

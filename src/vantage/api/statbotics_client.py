@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, Optional
+from typing import Any
+
 import httpx
 from pydantic import BaseModel
 
@@ -37,6 +38,10 @@ class StatboticsMatchEPA(BaseModel):
     auto_points: float | None = None
     teleop_points: float | None = None
     rp_points: float | None = None
+    pred_winner: str | None = None
+    pred_red_score: float | None = None
+    pred_blue_score: float | None = None
+    pred_red_prob: float | None = None
 
 
 class StatboticsError(Exception):
@@ -84,13 +89,20 @@ class StatboticsClient:
                 )
                 raise StatboticsError(f"Statbotics {method} {path}: {e}") from e
             except httpx.RequestError as e:
-                logger.error("Statbotics request failed", method=method, path=path, error=str(e))
+                logger.error(
+                    "Statbotics request failed",
+                    method=method,
+                    path=path,
+                    error=str(e),
+                )
                 raise StatboticsError(f"Statbotics {method} {path}: {e}") from e
 
     def get(self, path: str, **kwargs: Any) -> Any:
         return self._request("GET", path, **kwargs)
 
-    async def get_team_epa(self, team_number: int, season: int | None = None) -> StatboticsTeamEPA | None:
+    async def get_team_epa(
+        self, team_number: int, season: int | None = None
+    ) -> StatboticsTeamEPA | None:
         try:
             params = {}
             if season:
@@ -106,6 +118,7 @@ class StatboticsClient:
         try:
             data = await self.get(f"/match/{match_key}")
             epas = data.get("epas", {})
+            pred = data.get("pred", {}) or {}
             results = []
             for team_key, epa_data in epas.items():
                 match_epa = StatboticsMatchEPA(
@@ -116,6 +129,10 @@ class StatboticsClient:
                     teleop_epa=epa_data.get("teleop_epa"),
                     endgame_epa=epa_data.get("endgame_epa"),
                     overall_epa=epa_data.get("epa"),
+                    pred_winner=pred.get("winner"),
+                    pred_red_score=pred.get("red_score"),
+                    pred_blue_score=pred.get("blue_score"),
+                    pred_red_prob=pred.get("red_win_prob"),
                 )
                 results.append(match_epa)
             return results
