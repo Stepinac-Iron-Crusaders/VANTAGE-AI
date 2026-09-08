@@ -41,6 +41,13 @@ class Settings(BaseSettings):
     statbotics_base_url: str = "https://api.statbotics.io/v3"
     statbotics_rate_limit: int = 5  # requests per second
 
+    # Google Gemini API
+    gemini_api_key: Optional[str] = Field(default=None, description="Gemini API key")
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_model: str = "gemini-3.6-flash"
+    gemini_temperature: float = 0.2
+    gemini_max_tokens: int = 8192
+
     # Data Pipeline
     pipeline_batch_size: int = 100
     pipeline_max_retries: int = 3

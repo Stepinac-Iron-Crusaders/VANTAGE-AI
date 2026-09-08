@@ -75,5 +75,5 @@ python scripts/phase2_cli.py run <run_id>         # full summary + predictions d
 Per-level breakdowns (e.g. qm 80 / sf 13 / f 2) are printed by the CLI and
 stored in each run's metrics.
 
-> Phase 2 has **not** been pushed to GitHub yet. It is pending review and
-> confirmation that it works perfectly.
+> Phase 2 is committed and pushed to GitHub
+> (`https://github.com/Stepinac-Iron-Crusaders/VANTAGE-AI`).
