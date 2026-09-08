@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Replay — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>Historical Replay</h1>
+<p class="muted">How prediction strategies would have performed on historical events (Phase 2).</p>
+
+{% if runs %}
+<table>
+  <thead>
+    <tr><th>Event</th><th>Strategy</th><th>Status</th><th>Predicted</th><th>Win acc</th><th>MAE</th><th>RMSE</th><th>Brier</th><th>Log loss</th></tr>
+  </thead>
+  <tbody>
+    {% for r in runs %}
+    <tr>
+      <td><a href="/events/{{ r.event_key }}">{{ r.event_key }}</a></td>
+      <td>{{ r.strategy }}</td>
+      <td>{{ r.status }}</td>
+      <td>{{ r.predicted_matches }}/{{ r.total_matches }}</td>
+      <td>{{ r.win_accuracy|pct }}</td>
+      <td>{{ r.score_mae|f1 }}</td>
+      <td>{{ r.score_rmse|f1 }}</td>
+      <td>{{ r.brier_score|f1 }}</td>
+      <td>{{ r.log_loss|f1 }}</td>
+      <td><a href="/replay/{{ r.id }}">open →</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No replay runs. Create one with <code>python scripts/phase2_cli.py replay 2025miket</code>.</p>
+{% endif %}
+
+{% endblock %}

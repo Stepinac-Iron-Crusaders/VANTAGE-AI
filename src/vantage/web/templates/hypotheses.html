@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Hypotheses — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>Strategic Hypotheses</h1>
+
+<div class="filters">
+  <a href="/hypotheses" class="{{ 'active' if not status }}">All</a>
+  {% for s in ['unconfirmed', 'confirmed', 'refuted'] %}
+  <a href="/hypotheses?status={{ s }}" class="{{ 'active' if status == s }}">{{ s }}</a>
+  {% endfor %}
+</div>
+
+{% if items %}
+<table>
+  <thead><tr><th>Team</th><th>Category</th><th>Hypothesis</th><th>Conf</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for h in items %}
+    <tr>
+      <td><a href="/teams/{{ h.team_number }}">{{ h.team_number }}</a></td>
+      <td>{{ h.category }}</td>
+      <td>{{ h.hypothesis_text }}</td>
+      <td>{{ h.confidence|pct }}</td>
+      <td><span class="tag dim">{{ h.status }}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No hypotheses stored yet.</p>
+{% endif %}
+
+{% endblock %}

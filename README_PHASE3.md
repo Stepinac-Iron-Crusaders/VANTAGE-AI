@@ -66,5 +66,3 @@ python scripts/phase3_cli.py status                        # recent research rec
 `python tests/test_phase3.py` (plus `test_phase1.py` / `test_phase2.py`) passes.
 Tests cover JSON extraction, retry-hint parsing, dossier parsing, hypothesis
 parsing, and the observation lineup filter — all offline (no API calls).
-
-> Phase 3 is not pushed yet; it is pending review.

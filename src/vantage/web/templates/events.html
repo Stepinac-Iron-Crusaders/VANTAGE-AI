@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Vantage FRC — Events{% endblock %}
+{% block content %}
+
+<h1>Events</h1>
+{% if events %}
+<table>
+  <thead><tr><th>Code</th><th>Name</th><th>Season</th><th>Matches</th><th></th></tr></thead>
+  <tbody>
+    {% for e in events %}
+    <tr>
+      <td><a href="/events/{{ e.event_code }}">{{ e.event_code }}</a></td>
+      <td>{{ e.name }}</td>
+      <td>{{ e.season }}</td>
+      <td>{{ e.match_count }}</td>
+      <td><a href="/events/{{ e.event_code }}">open →</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No events ingested. Use Phase 1 ingestion to add one.</p>
+{% endif %}
+
+{% endblock %}

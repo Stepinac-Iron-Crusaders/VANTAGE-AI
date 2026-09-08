@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Observations — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>Match Observations</h1>
+
+{% if items %}
+<ul class="feed">
+  {% for o in items %}
+  <li>
+    <span class="tag">team {{ o.team_number }}</span>
+    <span class="tag dim">{{ o.event_type }}</span>
+    <span class="conf">{{ o.confidence|pct }}</span>
+    {% if o.team_number %}<a class="float-right" href="/teams/{{ o.team_number }}">team →</a>{% endif %}
+    <div class="feed-title">{{ o.observation }}</div>
+    <div class="muted">
+      {{ o.raw_data.get('match_key', '') if o.raw_data else '' }}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">No observations yet. Run <code>python scripts/phase3_cli.py observe 2025miket --limit 3</code>.</p>
+{% endif %}
+
+{% endblock %}

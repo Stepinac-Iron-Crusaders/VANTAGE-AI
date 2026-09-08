@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Team {{ team.team_number }} — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>
+  Team {{ team.team_number }}
+  <span class="muted">— {{ team.nickname or team.name or "unknown name" }}</span>
+</h1>
+
+<div class="grid three">
+  <section class="card">
+    <h2>Overview</h2>
+    <p class="muted">{{ team.name or "no full name on file" }} · {{ team.location or "location unknown" }}</p>
+    <table>
+      <tr><th>Rookie year</th><td>{{ team.rookies_year or "n/a" }}</td></tr>
+      <tr><th>Latest overall EPA</th><td>{{ epa.overall_epa|f1 if epa else "n/a" }}</td></tr>
+      <tr><th>Auto / Teleop / Endgame</th><td>
+        {{ epa.auto_epa|f1 if epa else "n/a" }} / {{ epa.teleop_epa|f1 if epa else "n/a" }} / {{ epa.endgame_epa|f1 if epa else "n/a" }}
+      </td></tr>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Event record{% if event %} · {{ event.event_code }}{% endif %}</h2>
+    {% if record %}
+    <table>
+      <tr><th>W / L / T</th><td>{{ record.wins }} / {{ record.losses }} / {{ record.ties }}</td></tr>
+      <tr><th>Win rate</th><td>{{ record.win_rate|pct }}</td></tr>
+      <tr><th>Avg score</th><td>{{ record.avg_score|f1 }}</td></tr>
+      <tr><th>Avg margin</th><td>{{ record.avg_margin|f1 }}</td></tr>
+    </table>
+    {% else %}
+    <p class="muted">No completed matches for this team yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>EPA trend ({{ epa_series|length }} matches)</h2>
+    {% if epa_series %}
+    <div class="bars">
+      {% for p in epa_series %}
+      <div class="bar-row">
+        <span class="bar-label" title="{{ p.match_key }}">{{ p.match_key.split('_')[-1] }}</span>
+        <div class="bar-track">
+          <div class="bar" style="width: {{ (p.overall_epa or 0) / (150) * 100 }}%"></div>
+        </div>
+        <span class="bar-val">{{ p.overall_epa|f1 }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No EPA data for season {{ season }}.</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="grid">
+  <section>
+    <h2>Scouting dossiers</h2>
+    {% if dossiers %}
+    <ul class="feed">
+      {% for d in dossiers %}
+      <li>
+        <span class="tag">{{ d.info_type }}</span>
+        <span class="conf">{{ d.confidence|pct }}</span>
+        <div class="feed-title">{{ d.title }}</div>
+        <div class="muted">{{ d.content_summary|short }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">Run <code>python scripts/phase3_cli.py scout-team {{ team.team_number }}</code> to generate one.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Hypotheses</h2>
+    {% if hypotheses %}
+    <ul class="feed">
+      {% for h in hypotheses %}
+      <li>
+        <span class="tag">{{ h.category }}</span>
+        <span class="tag dim">{{ h.status }}</span>
+        <span class="conf">{{ h.confidence|pct }}</span>
+        <div class="feed-title">{{ h.hypothesis_text }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No hypotheses yet for this team.</p>
+    {% endif %}
+
+    <h2>Observations</h2>
+    {% if observations %}
+    <ul class="feed">
+      {% for o in observations %}
+      <li>
+        <span class="tag dim">{{ o.event_type }}</span>
+        <span class="conf">{{ o.confidence|pct }}</span>
+        <div class="feed-title">{{ o.observation }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No observations yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+{% endblock %}

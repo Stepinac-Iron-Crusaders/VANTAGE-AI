@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Replay run {{ run.id|truncate(8, true, "") }} — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>Replay run <span class="muted">{{ run.id|truncate(8, true, "") }}</span></h1>
+<p class="muted">{{ run.event_key }} · strategy <strong>{{ run.strategy }}</strong> · {{ run.created_at }}</p>
+
+<div class="cards">
+  <div class="card"><div class="num">{{ run.win_accuracy|pct }}</div><div class="label">Win accuracy</div></div>
+  <div class="card"><div class="num">{{ run.score_mae|f1 }}</div><div class="label">Score MAE</div></div>
+  <div class="card"><div class="num">{{ run.score_rmse|f1 }}</div><div class="label">RMSE</div></div>
+  <div class="card"><div class="num">{{ run.brier_score|f1 }}</div><div class="label">Brier</div></div>
+  <div class="card"><div class="num">{{ run.log_loss|f1 }}</div><div class="label">Log loss</div></div>
+</div>
+
+<section>
+  <h2>Predictions ({{ predictions|length }})</h2>
+  <table>
+    <thead>
+      <tr><th>Match</th><th>Pred winner</th><th>Pred score</th><th>Actual score</th><th>Correct</th><th>Score err</th></tr>
+    </thead>
+    <tbody>
+      {% for p in predictions %}
+      <tr>
+        <td>{{ p.match_key }}</td>
+        <td>{{ p.predicted_winner or "—" }}</td>
+        <td>{{ p.predicted_red_score|f1 }} : {{ p.predicted_blue_score|f1 }}</td>
+        <td>{{ p.actual_red_score or "—" }} : {{ p.actual_blue_score or "—" }}</td>
+        <td>
+          {% if p.correct is not none %}
+          <span class="tag {{ 'ok' if p.correct else 'bad' }}">{{ '✓' if p.correct else '✗' }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>{{ p.score_error|f1 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Vantage FRC{% endblock %}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🏗 VANTAGE <span>FRC CO-PILOT</span></div>
+    <nav>
+      <a href="/" class="{{ 'active' if active == 'index.html' }}">Home</a>
+      <a href="/events" class="{{ 'active' if active == 'events.html' }}">Events</a>
+      <a href="/matchup" class="{{ 'active' if active == 'matchup.html' }}">Matchup</a>
+      <a href="/replay" class="{{ 'active' if active == 'replay.html' }}">Replay</a>
+      <a href="/scouting" class="{{ 'active' if active == 'scouting.html' }}">Scouting</a>
+      <a href="/hypotheses" class="{{ 'active' if active == 'hypotheses.html' }}">Hypotheses</a>
+      <a href="/observations" class="{{ 'active' if active == 'observations.html' }}">Notes</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">Vantage FRC · Phase 4 dashboard · data from The Blue Alliance / Statbotics / Gemini</footer>
+</body>
+</html>

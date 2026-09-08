@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ event.event_code }} — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>{{ event.name }} <span class="muted">({{ event.event_code }})</span></h1>
+<p class="muted">Season {{ event.season }} · {{ matches|length }} matches · {{ rankings|length }} ranked teams</p>
+
+<div class="grid">
+  <section>
+    <h2>Rankings</h2>
+    <table>
+      <thead><tr><th>Rank</th><th>Team</th><th>Nickname</th><th>RP</th><th>EPA</th></tr></thead>
+      <tbody>
+        {% for r in rankings %}
+        <tr>
+          <td>{{ r.rank }}</td>
+          <td><a href="/teams/{{ r.team_number }}">{{ r.team_number }}</a></td>
+          <td>{{ r.nickname or "—" }}</td>
+          <td>{{ r.rp|f1 }}</td>
+          <td>{{ r.epa.overall_epa|f1 if r.epa else "n/a" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Replay runs</h2>
+    {% if runs %}
+    <table>
+      <thead><tr><th>Strategy</th><th>Win acc</th><th>MAE</th><th>Brier</th><th></th></tr></thead>
+      <tbody>
+        {% for r in runs %}
+        <tr>
+          <td>{{ r.strategy }}</td>
+          <td>{{ r.win_accuracy|pct }}</td>
+          <td>{{ r.score_mae|f1 }}</td>
+          <td>{{ r.brier_score|f1 }}</td>
+          <td><a href="/replay/{{ r.id }}">details →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No replay runs for this event yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section>
+  <h2>Matches ({{ matches|length }})</h2>
+  <table>
+    <thead>
+      <tr><th>Key</th><th>Level</th><th>Red</th><th>Score</th><th>Blue</th><th>Winner</th></tr>
+    </thead>
+    <tbody>
+      {% for m in matches %}
+      <tr>
+        <td>{{ m.key }}</td>
+        <td>{{ m.competition_level }}{{ m.set_number }}{{ m.match_number }}</td>
+        <td>
+          {% for t in m.red_teams %}<a href="/teams/{{ t }}">{{ t }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+        </td>
+        <td class="score">{{ m.red_score if m.red_score is not none else "—" }} : {{ m.blue_score if m.blue_score is not none else "—" }}</td>
+        <td>
+          {% for t in m.blue_teams %}<a href="/teams/{{ t }}">{{ t }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+        </td>
+        <td>
+          {% if m.winning_alliance %}
+          <span class="tag {{ 'red' if m.winning_alliance == 'red' else 'blue' }}">{{ m.winning_alliance }}</span>
+          {% else %}<span class="tag dim">{{ m.status }}</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% endblock %}

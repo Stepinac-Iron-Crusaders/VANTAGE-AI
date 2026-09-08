@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Vantage FRC — Dashboard{% endblock %}
+{% block content %}
+
+<h1>Dashboard</h1>
+
+<section class="cards">
+  <div class="card"><div class="num">{{ stats.events }}</div><div class="label">Events</div></div>
+  <div class="card"><div class="num">{{ stats.teams }}</div><div class="label">Teams</div></div>
+  <div class="card"><div class="num">{{ stats.matches }}</div><div class="label">Matches</div></div>
+  <div class="card"><div class="num">{{ stats.epa_rows }}</div><div class="label">EPA rows</div></div>
+  <div class="card"><div class="num">{{ stats.replay_runs }}</div><div class="label">Replay runs</div></div>
+  <div class="card"><div class="num">{{ stats.hypotheses }}</div><div class="label">Hypotheses</div></div>
+  <div class="card"><div class="num">{{ stats.observations }}</div><div class="label">Observations</div></div>
+</section>
+
+<div class="grid">
+  <section>
+    <h2>Events</h2>
+    {% if events %}
+    <table>
+      <thead><tr><th>Code</th><th>Name</th><th>Season</th><th>Matches</th></tr></thead>
+      <tbody>
+        {% for e in events %}
+        <tr>
+          <td><a href="/events/{{ e.event_code }}">{{ e.event_code }}</a></td>
+          <td>{{ e.name }}</td>
+          <td>{{ e.season }}</td>
+          <td>{{ e.match_count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No events ingested yet.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Replay performance</h2>
+    {% if runs %}
+    <table>
+      <thead><tr><th>Event</th><th>Strategy</th><th>Win acc</th><th>MAE</th></tr></thead>
+      <tbody>
+        {% for r in runs %}
+        <tr>
+          <td><a href="/replay/{{ r.id }}">{{ r.event_key }}</a></td>
+          <td>{{ r.strategy }}</td>
+          <td>{{ r.win_accuracy|pct }}</td>
+          <td>{{ r.score_mae|f1 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">Run a replay first (<code>python scripts/phase2_cli.py replay 2025miket</code>).</p>
+    {% endif %}
+  </section>
+</div>
+
+<section>
+  <h2>Recent research</h2>
+  {% if research %}
+  <ul class="feed">
+    {% for r in research %}
+    <li>
+      <span class="tag">{{ r.info_type }}</span>
+      <span class="tag dim">team {{ r.team_number if r.team_number else "—" }}</span>
+      <span class="conf">{{ r.confidence|pct }}</span>
+      <div class="feed-title">{{ r.title }}</div>
+      <div class="muted">{{ r.content_summary|short }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Nothing generated yet — try <code>scout-team</code> from the CLI.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

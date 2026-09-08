@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Matchup Advisor — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>Alliance Matchup Advisor</h1>
+<p class="muted">Pick two alliances (3 teams each). Vantage predicts the scoreline from EPA and — optionally — adds Gemini reasoning.</p>
+
+<form method="post" action="/matchup" class="matchup-form">
+  <label>Event
+    <select name="event_key">
+      {% for e in events %}
+      <option value="{{ e.event_code }}" {{ 'selected' if selected_event == e.event_code }}>{{ e.event_code }} ({{ e.season }})</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <div class="alliance-box red">
+    <h3>RED alliance</h3>
+    <input name="red_teams" placeholder="comma separated team numbers" value="{{ ','.join(result.red_teams|map('string')) if result else '27,5150,494' }}">
+  </div>
+
+  <div class="alliance-box blue">
+    <h3>BLUE alliance</h3>
+    <input name="blue_teams" placeholder="comma separated team numbers" value="{{ ','.join(result.blue_teams|map('string')) if result else '5460,2137,4998' }}">
+  </div>
+
+  <label class="check"><input type="checkbox" name="with_gemini"> Enhance with Gemini reasoning (uses API quota)</label>
+  <button type="submit">Analyze matchup</button>
+</form>
+
+{% if result %}
+<section class="result">
+  <h2>Result</h2>
+  <div class="scoreline">
+    <span class="winner">{{ result.predicted_winner|upper }}</span> wins
+    — predicted
+    <strong>{{ result.predicted_red_score|f1 }}</strong> (red) :
+    <strong>{{ result.predicted_blue_score|f1 }}</strong> (blue)
+    · confidence {{ result.confidence|pct }}
+  </div>
+
+  <h3>EPA breakdown</h3>
+  <table>
+    <thead><tr><th>Team</th><th>Overall</th><th>Auto</th><th>Teleop</th><th>Endgame</th></tr></thead>
+    <tbody>
+      {% for t in result.red_teams + result.blue_teams %}
+      {% set e = result.epas.get(t|string) %}
+      <tr>
+        <td><a href="/teams/{{ t }}">{{ t }}</a></td>
+        <td>{{ e.overall_epa|f1 }}</td>
+        <td>{{ e.auto_epa|f1 }}</td>
+        <td>{{ e.teleop_epa|f1 }}</td>
+        <td>{{ e.endgame_epa|f1 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if result.reasoning %}
+  <h3>Gemini analysis</h3>
+  <p>{{ result.reasoning }}</p>
+  {% if result.upset_risk %}<p class="upset"><strong>Upset risk:</strong> {{ result.upset_risk }}</p>{% endif %}
+  {% if result.scouting_notes %}
+  <ul class="feed">
+    {% for n in result.scouting_notes %}<li class="feed-title">{{ n }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  {% else %}
+  <p class="muted">Run again with <em>Enhance with Gemini reasoning</em> for a full tactical write-up.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% endblock %}

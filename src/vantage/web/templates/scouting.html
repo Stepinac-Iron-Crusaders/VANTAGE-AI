@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Scouting — Vantage FRC{% endblock %}
+{% block content %}
+
+<h1>Scouting Intelligence Feed</h1>
+
+<div class="filters">
+  <a href="/scouting" class="{{ 'active' if not selected_type }}">All</a>
+  <a href="/scouting?info_type=scouting_dossier" class="{{ 'active' if selected_type == 'scouting_dossier' }}">Dossiers</a>
+  <a href="/scouting?info_type=matchup_analysis" class="{{ 'active' if selected_type == 'matchup_analysis' }}">Matchups</a>
+</div>
+
+{% if records %}
+<ul class="feed">
+  {% for r in records %}
+  <li>
+    <span class="tag">{{ r.info_type }}</span>
+    <span class="tag dim">team {{ r.team_number if r.team_number else "—" }}</span>
+    <span class="conf">{{ r.confidence|pct }}</span>
+    {% if r.team_number %}<a class="float-right" href="/teams/{{ r.team_number }}">team →</a>{% endif %}
+    <div class="feed-title">{{ r.title }}</div>
+    <div class="muted">{{ r.content_summary }}</div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">No research records here yet. Generate some with <code>scout-team</code> or the Matchup page.</p>
+{% endif %}
+
+{% endblock %}
